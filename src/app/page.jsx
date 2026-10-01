@@ -122,12 +122,9 @@ function Metric({
   value,
   note,
   emphasize = false,
-}: {
-  label: string;
-  value: string;
-  note: string;
-  emphasize?: boolean;
-}) {
+}
+
+) {
   return (
     <Card className={emphasize ? "bg-accent" : undefined}>
       <CardHeader>

@@ -6,21 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
-import { createPurchase, createSale, getProducts, type Product } from "@/lib/api";
+import { createPurchase, createSale, getProducts } from "@/lib/api";
 import { inr, qty, todayInput } from "@/lib/format";
 import { useBook } from "@/lib/use-book";
-
-type DraftLine = {
-  key: string;
-  productId: string;
-  qty: string;
-  rate: string;
-};
 
 const selectClass =
   "h-14 w-full rounded-lg border border-input bg-card px-3 text-lg outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
-function blankLine(product?: Product, mode: "in" | "out" = "in"): DraftLine {
+function blankLine(product, mode = "in") {
   return {
     key: Math.random().toString(36).slice(2),
     productId: product?.id ?? "",
@@ -29,7 +22,7 @@ function blankLine(product?: Product, mode: "in" | "out" = "in"): DraftLine {
   };
 }
 
-export function VoucherForm({ mode }: { mode: "in" | "out" }) {
+export function VoucherForm({ mode }) {
   const { data: products, error, loading, reload } = useBook(getProducts);
   const stockIn = mode === "in";
 
@@ -62,28 +55,26 @@ function Form({
   products,
   mode,
   onPosted,
-}: {
-  products: Product[];
-  mode: "in" | "out";
-  onPosted: () => void;
-}) {
+}
+
+) {
   const stockIn = mode === "in";
   const [party, setParty] = useState("");
   const [date, setDate] = useState(todayInput);
-  const [lines, setLines] = useState<DraftLine[]>([blankLine(products[0], mode)]);
+  const [lines, setLines] = useState([blankLine(products[0], mode)]);
   const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState(null);
+  const [error, setError] = useState(null);
 
   const byId = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
 
-  function updateLine(key: string, patch: Partial<DraftLine>) {
+  function updateLine(key, patch) {
     setLines((current) =>
       current.map((line) => (line.key === key ? { ...line, ...patch } : line)),
     );
   }
 
-  function chooseProduct(key: string, productId: string) {
+  function chooseProduct(key, productId) {
     const product = byId.get(productId);
     updateLine(key, {
       productId,
@@ -91,7 +82,7 @@ function Form({
     });
   }
 
-  const demand = new Map<string, number>();
+  const demand = new Map();
   for (const line of lines) {
     const amount = Number(line.qty);
     if (!line.productId || !Number.isFinite(amount) || amount <= 0) continue;

@@ -1,7 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
-export function PageHeader({ title, lede }: { title: string; lede: string }) {
+export function PageHeader({ title, lede }) {
   return (
     <header className="mb-6">
       <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{title}</h1>
@@ -25,10 +25,9 @@ export function LoadingState() {
 export function ErrorState({
   message,
   onRetry,
-}: {
-  message: string;
-  onRetry: () => void;
-}) {
+}
+
+) {
   return (
     <Alert variant="destructive" className="px-4 py-4">
       <AlertTitle className="text-lg">The counter cannot reach the stock book</AlertTitle>
@@ -42,7 +41,7 @@ export function ErrorState({
   );
 }
 
-export function EmptyState({ title, body }: { title: string; body: string }) {
+export function EmptyState({ title, body }) {
   return (
     <div className="rounded-xl border border-dashed border-border bg-card px-5 py-10">
       <p className="text-2xl font-semibold tracking-tight">{title}</p>

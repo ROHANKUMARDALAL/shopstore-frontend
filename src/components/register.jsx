@@ -12,34 +12,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
-import {
-  deletePurchase,
-  deleteSale,
-  getPurchases,
-  getSales,
-  type Purchase,
-  type Sale,
-} from "@/lib/api";
+import { deletePurchase, deleteSale, getPurchases, getSales } from "@/lib/api";
 import { inr, qty, shopDate } from "@/lib/format";
 import { useBook } from "@/lib/use-book";
 
-type Row = {
-  id: string;
-  date: string;
-  party: string;
-  total: number;
-  margin: number | null;
-  lines: {
-    productName: string;
-    unit: string;
-    qty: number;
-    rate: number;
-    lineTotal: number;
-    margin: number | null;
-  }[];
-};
-
-function purchaseRows(vouchers: Purchase[]): Row[] {
+function purchaseRows(vouchers) {
   return vouchers.map((voucher) => ({
     id: voucher.id,
     date: voucher.date,
@@ -57,7 +34,7 @@ function purchaseRows(vouchers: Purchase[]): Row[] {
   }));
 }
 
-function saleRows(vouchers: Sale[]): Row[] {
+function saleRows(vouchers) {
   return vouchers.map((voucher) => ({
     id: voucher.id,
     date: voucher.date,
@@ -75,7 +52,7 @@ function saleRows(vouchers: Sale[]): Row[] {
   }));
 }
 
-export function Register({ kind }: { kind: "purchase" | "sale" }) {
+export function Register({ kind }) {
   if (kind === "purchase") return <PurchaseRegister />;
   return <SaleRegister />;
 }
@@ -115,18 +92,13 @@ function RegisterView({
   error,
   reload,
   remove,
-}: {
-  kind: "purchase" | "sale";
-  rows: Row[] | null;
-  loading: boolean;
-  error: string | null;
-  reload: () => void;
-  remove: (id: string) => Promise<unknown>;
-}) {
-  const [pending, setPending] = useState<Row | null>(null);
+}
+
+) {
+  const [pending, setPending] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState(null);
+  const [notice, setNotice] = useState(null);
   const purchase = kind === "purchase";
 
   async function confirmDelete() {

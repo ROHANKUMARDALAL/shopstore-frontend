@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "cn";
@@ -14,7 +13,7 @@ const links = [
   { href: "/sales", label: "Sales" },
 ];
 
-export function Shell({ children }: { children: ReactNode }) {
+export function Shell({ children }) {
   const pathname = usePathname();
 
   return (

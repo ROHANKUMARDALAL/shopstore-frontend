@@ -13,8 +13,7 @@ import {
   createProduct,
   getCategories,
   getProducts,
-  type Category,
-  type Product,
+
 } from "@/lib/api";
 import { inr, qty } from "@/lib/format";
 import { useBook } from "@/lib/use-book";
@@ -63,7 +62,7 @@ export default function ProductsPage() {
   );
 }
 
-function ProductList({ products }: { products: Product[] }) {
+function ProductList({ products }) {
   if (products.length === 0) {
     return (
       <EmptyState
@@ -73,7 +72,7 @@ function ProductList({ products }: { products: Product[] }) {
     );
   }
 
-  const groups = new Map<string, Product[]>();
+  const groups = new Map();
   for (const product of products) {
     const key = product.categoryName || "Uncategorised";
     const list = groups.get(key) ?? [];
@@ -133,10 +132,9 @@ function ProductList({ products }: { products: Product[] }) {
 function AddProduct({
   categories,
   onCreated,
-}: {
-  categories: Category[];
-  onCreated: () => void;
-}) {
+}
+
+) {
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
   const [unit, setUnit] = useState("50 kg bag");
@@ -146,8 +144,8 @@ function AddProduct({
   const [reorderLevel, setReorderLevel] = useState("10");
   const [categoryName, setCategoryName] = useState("");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState(null);
+  const [error, setError] = useState(null);
 
   async function addCategory() {
     setError(null);
