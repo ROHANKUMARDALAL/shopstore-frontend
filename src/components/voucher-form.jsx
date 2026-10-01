@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
 import { createPurchase, createSale, getProducts } from "@/lib/api";
-import { inr, qty, todayInput } from "@/lib/format";
+import { inr, qtyWithUnit, todayInput } from "@/lib/format";
 import { useBook } from "@/lib/use-book";
 
 const selectClass =
@@ -94,7 +94,7 @@ function Form({
     for (const [productId, asked] of demand) {
       const product = byId.get(productId);
       if (product && asked > product.stockQty) {
-        blocked = `Only ${qty(product.stockQty)} ${product.unit} of ${product.name} are in stock. This sale asks for ${qty(asked)}.`;
+        blocked = `Only ${qtyWithUnit(product.stockQty, product.unit)} of ${product.name} are in stock. This sale asks for ${qtyWithUnit(asked, product.unit)}.`;
       }
     }
   }
@@ -224,13 +224,13 @@ function Form({
                 >
                   {products.map((item) => (
                     <option key={item.id} value={item.id}>
-                      {item.name} — {qty(item.stockQty)} {item.unit}
+                      {item.name} — {qtyWithUnit(item.stockQty, item.unit)}
                     </option>
                   ))}
                 </select>
                 {product ? (
                   <p className="text-base text-muted-foreground">
-                    On hand {qty(product.stockQty)} {product.unit}. CP {inr(product.cp)}. SP{" "}
+                    On hand {qtyWithUnit(product.stockQty, product.unit)}. CP {inr(product.cp)}. SP{" "}
                     {inr(product.sp)}.
                   </p>
                 ) : null}

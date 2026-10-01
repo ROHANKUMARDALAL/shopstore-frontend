@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { getDashboard } from "@/lib/api";
-import { inr, qty } from "@/lib/format";
+import { inr, qtyWithUnit } from "@/lib/format";
 import { useBook } from "@/lib/use-book";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -101,9 +101,9 @@ export default function DashboardPage() {
                       <CardContent className="text-lg">
                         On hand{" "}
                         <span className="font-semibold tabular-nums">
-                          {qty(product.stockQty)} {product.unit}
+                          {qtyWithUnit(product.stockQty, product.unit)}
                         </span>
-                        . Reorder at {qty(product.reorderLevel)}.
+                        . Reorder at {qtyWithUnit(product.reorderLevel, product.unit)}.
                       </CardContent>
                     </Card>
                   </li>

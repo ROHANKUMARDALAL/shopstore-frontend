@@ -15,7 +15,7 @@ import {
   getProducts,
 
 } from "@/lib/api";
-import { inr, qty } from "@/lib/format";
+import { inr, qtyWithUnit } from "@/lib/format";
 import { useBook } from "@/lib/use-book";
 
 const units = ["45 kg bag", "50 kg bag", "25 kg bag", "1 kg", "1 litre", "500 g", "250 ml"];
@@ -95,7 +95,7 @@ function ProductList({ products }) {
                       {product.lowStock ? <Badge variant="destructive">Low stock</Badge> : null}
                     </div>
                     <p className="text-lg font-semibold tabular-nums">
-                      {qty(product.stockQty)} {product.unit}
+                      {qtyWithUnit(product.stockQty, product.unit)}
                     </p>
                   </CardHeader>
                   <CardContent className="grid grid-cols-3 gap-3 text-base">
@@ -194,7 +194,7 @@ function AddProduct({
       setCp("");
       setSp("");
       setStockQty("0");
-      setMessage(`${created.name} added. On hand: ${qty(created.stockQty)} ${created.unit}.`);
+      setMessage(`${created.name} added. On hand: ${qtyWithUnit(created.stockQty, created.unit)}.`);
       onCreated();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not add the product.");

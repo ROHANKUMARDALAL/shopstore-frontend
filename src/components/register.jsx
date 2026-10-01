@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
 import { deletePurchase, deleteSale, getPurchases, getSales } from "@/lib/api";
-import { inr, qty, shopDate } from "@/lib/format";
+import { inr, qtyWithUnit, shopDate } from "@/lib/format";
 import { useBook } from "@/lib/use-book";
 
 function purchaseRows(vouchers) {
@@ -168,7 +168,7 @@ function RegisterView({
               <ul className="mt-4 grid gap-2">
                 {voucher.lines.map((line, index) => (
                   <li key={`${voucher.id}-${index}`} className="text-lg">
-                    {line.productName} · {qty(line.qty)} {line.unit} @ {inr(line.rate)}
+                    {line.productName} · {qtyWithUnit(line.qty, line.unit)} @ {inr(line.rate)}
                     <span className="text-muted-foreground"> · {inr(line.lineTotal)}</span>
                     {line.margin != null ? (
                       <span className="text-muted-foreground"> · margin {inr(line.margin)}</span>

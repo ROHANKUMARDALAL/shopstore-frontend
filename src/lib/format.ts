@@ -10,6 +10,10 @@ export function qty(value: number) {
   return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 3 }).format(value);
 }
 
+export function qtyWithUnit(count: number, unit: string) {
+  return `${qty(count)} × ${unit}`;
+}
+
 export function todayInput() {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Kolkata",
