@@ -29,11 +29,11 @@ export function VoucherForm({ mode }) {
   return (
     <div>
       <PageHeader
-        title={stockIn ? "Stock in (we bought)" : "Stock out (we sold)"}
+        title={stockIn ? "Buy / Stock in" : "Sell / Stock out"}
         lede={
           stockIn
-            ? "A lorry from the supplier. Quantity goes up. The rate on this bill becomes the latest cost price."
-            : "Bags leaving for another shop. Quantity goes down. The rate we charge becomes the latest selling price. Margin is shown before you post."
+            ? "Step 3: supplier bill. Quantity goes up. The rate on this bill becomes the latest cost price."
+            : "Step 4: shop bill. Quantity goes down. Margin shows before you post. The sale is blocked if you ask for more than is on hand."
         }
       />
       {loading && !products ? <LoadingState /> : null}

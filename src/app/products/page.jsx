@@ -16,6 +16,7 @@ import {
 
 } from "@/lib/api";
 import { inr, qtyWithUnit } from "@/lib/format";
+import { stockStatusLabel, stockStatusVariant } from "@/lib/stock-status";
 import { useBook } from "@/lib/use-book";
 
 const units = ["45 kg bag", "50 kg bag", "25 kg bag", "1 kg", "1 litre", "500 g", "250 ml"];
@@ -34,7 +35,7 @@ export default function ProductsPage() {
     <div>
       <PageHeader
         title="Products on the book"
-        lede="Cost price, selling price, bags on hand, and the margin on each bag."
+        lede="Step 2 of the counter: save each bag with pack size, CP, SP, and opening stock. In stock, low quantity, and out of stock show on every row."
       />
       {!ready && loading ? <LoadingState /> : null}
       {!ready && error ? (
@@ -92,7 +93,9 @@ function ProductList({ products }) {
                   <CardHeader className="gap-2">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <CardTitle className="text-xl">{product.name}</CardTitle>
-                      {product.lowStock ? <Badge variant="destructive">Low stock</Badge> : null}
+                      <Badge variant={stockStatusVariant(product.stockStatus || (product.lowStock ? "low" : "in_stock"))}>
+                        {stockStatusLabel(product.stockStatus || (product.lowStock ? "low" : "in_stock"))}
+                      </Badge>
                     </div>
                     <p className="text-lg font-semibold tabular-nums">
                       {qtyWithUnit(product.stockQty, product.unit)}

@@ -1,3 +1,5 @@
+import { readToken } from "@/lib/auth-storage";
+
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:43121";
 
@@ -13,6 +15,8 @@ export class ApiError extends Error {
 
 export type Category = { id: string; name: string };
 
+export type StockStatus = "in_stock" | "low" | "out_of_stock";
+
 export type Product = {
   id: string;
   name: string;
@@ -26,6 +30,7 @@ export type Product = {
   marginPerUnit: number;
   marginPercent: number | null;
   lowStock: boolean;
+  stockStatus: StockStatus;
 };
 
 export type PurchaseLine = {
@@ -74,13 +79,26 @@ export type Dashboard = {
   lowStock: Product[];
 };
 
+export type AuthUser = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+export type AuthResponse = {
+  user: AuthUser;
+  token: string;
+};
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = readToken();
   let response: Response;
   try {
     response = await fetch(`${API_URL}${path}`, {
       ...init,
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(init?.headers || {}),
       },
       cache: "no-store",
@@ -99,6 +117,20 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
   return body as T;
 }
+
+export const signup = (body: { name: string; email: string; password: string }) =>
+  request<AuthResponse>("/api/auth/signup", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+
+export const login = (body: { email: string; password: string }) =>
+  request<AuthResponse>("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+
+export const getMe = () => request<{ user: AuthUser }>("/api/auth/me");
 
 export const getCategories = () => request<Category[]>("/api/categories");
 export const createCategory = (name: string) =>
