@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/password-input";
 import { signup } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -88,9 +89,8 @@ export default function SignupPage() {
           <Label htmlFor="password" className="text-base">
             Password
           </Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             autoComplete="new-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}

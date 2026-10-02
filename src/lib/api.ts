@@ -130,6 +130,31 @@ export const login = (body: { email: string; password: string }) =>
     body: JSON.stringify(body),
   });
 
+export const forgotUserId = (body: { name: string }) =>
+  request<{ matches: { name: string; email: string }[] }>("/api/auth/forgot-userid", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+
+export const forgotPassword = (body: { email: string }) =>
+  request<{ ok: boolean; email: string; resetCode: string; message: string }>(
+    "/api/auth/forgot-password",
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+  );
+
+export const resetPassword = (body: {
+  email: string;
+  resetCode: string;
+  newPassword: string;
+}) =>
+  request<{ ok: boolean; message: string }>("/api/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+
 export const getMe = () => request<{ user: AuthUser }>("/api/auth/me");
 
 export const getCategories = () => request<Category[]>("/api/categories");
