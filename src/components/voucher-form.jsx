@@ -8,10 +8,11 @@ import { Label } from "@/components/ui/label";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
 import { createPurchase, createSale, getProducts } from "@/lib/api";
 import { inr, qtyWithUnit, todayInput } from "@/lib/format";
+import { gstLabel } from "@/lib/gst";
 import { useBook } from "@/lib/use-book";
 
 const selectClass =
-  "h-14 w-full rounded-lg border border-input bg-card px-3 text-lg outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+  "h-11 w-full rounded-lg border border-input bg-card px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 function blankLine(product, mode = "in") {
   return {
@@ -29,19 +30,19 @@ export function VoucherForm({ mode }) {
   return (
     <div>
       <PageHeader
-        title={stockIn ? "Buy / Stock in" : "Sell / Stock out"}
+        title={stockIn ? "Stock in" : "Stock out"}
         lede={
           stockIn
-            ? "Step 3: supplier bill. Quantity goes up. The rate on this bill becomes the latest cost price."
-            : "Step 4: shop bill. Quantity goes down. Margin shows before you post. The sale is blocked if you ask for more than is on hand."
+            ? "Supplier bill by HSN. Quantity up, CP updates, GST and e-way bill optional."
+            : "Shop bill by HSN. Quantity down, margin before post, GST + e-way bill supported."
         }
       />
-      {loading && !products ? <LoadingState /> : null}
+      {loading && !products ? <LoadingState label="Loading products…" /> : null}
       {error && !products ? <ErrorState message={error} onRetry={reload} /> : null}
       {products && products.length === 0 ? (
         <EmptyState
-          title="Add a product before you book a voucher"
-          body="The counter needs urea, DAP, or a crop-protection pack on the book before stock can move."
+          title="Add a product first"
+          body="Products page se HSN ke saath product save karo, phir yahan stock move hoga."
         />
       ) : null}
       {products && products.length > 0 ? (
@@ -51,17 +52,14 @@ export function VoucherForm({ mode }) {
   );
 }
 
-function Form({
-  products,
-  mode,
-  onPosted,
-}
-
-) {
+function Form({ products, mode, onPosted }) {
   const stockIn = mode === "in";
   const [party, setParty] = useState("");
   const [date, setDate] = useState(todayInput);
   const [lines, setLines] = useState([blankLine(products[0], mode)]);
+  const [ewayBillNo, setEwayBillNo] = useState("");
+  const [vehicleNo, setVehicleNo] = useState("");
+  const [transporterName, setTransporterName] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState(null);
   const [error, setError] = useState(null);
@@ -94,7 +92,7 @@ function Form({
     for (const [productId, asked] of demand) {
       const product = byId.get(productId);
       if (product && asked > product.stockQty) {
-        blocked = `Only ${qtyWithUnit(product.stockQty, product.unit)} of ${product.name} are in stock. This sale asks for ${qtyWithUnit(asked, product.unit)}.`;
+        blocked = `Only ${qtyWithUnit(product.stockQty, product.unit)} of ${product.name} (HSN ${product.hsnCode}) are in stock. This sale asks for ${qtyWithUnit(asked, product.unit)}.`;
       }
     }
   }
@@ -113,7 +111,7 @@ function Form({
         return !line.productId || !(amount > 0) || line.rate.trim() === "" || !Number.isFinite(rate) || rate < 0;
       })
     ) {
-      setError("Each line needs a product, a quantity above zero, and a price.");
+      setError("Each line needs a product, quantity, and price.");
       return;
     }
     if (blocked) {
@@ -122,10 +120,12 @@ function Form({
     }
     setBusy(true);
     try {
+      const eway = { ewayBillNo, vehicleNo, transporterName };
       if (stockIn) {
         const saved = await createPurchase({
           supplierName: party.trim(),
           date,
+          ...eway,
           lines: lines.map((line) => ({
             product: line.productId,
             qty: Number(line.qty),
@@ -133,12 +133,13 @@ function Form({
           })),
         });
         setNotice(
-          `Posted. ${saved.supplierName} — ${inr(saved.total)} at cost. Stock has increased.`,
+          `Posted. ${saved.supplierName} — taxable ${inr(saved.taxableTotal)}, total ${inr(saved.total)} incl. GST.`,
         );
       } else {
         const saved = await createSale({
           customerShopName: party.trim(),
           date,
+          ...eway,
           lines: lines.map((line) => ({
             product: line.productId,
             qty: Number(line.qty),
@@ -146,10 +147,13 @@ function Form({
           })),
         });
         setNotice(
-          `Posted. ${saved.customerShopName} — ${inr(saved.total)}. Margin ${inr(saved.margin)}. Stock has decreased.`,
+          `Posted. ${saved.customerShopName} — total ${inr(saved.total)} incl. GST. Margin ${inr(saved.margin)}.`,
         );
       }
       setParty("");
+      setEwayBillNo("");
+      setVehicleNo("");
+      setTransporterName("");
       setLines([blankLine(products[0], mode)]);
       onPosted();
     } catch (err) {
@@ -168,41 +172,80 @@ function Form({
   }, 0);
 
   return (
-    <div className="grid max-w-3xl gap-5">
+    <div className="grid max-w-3xl gap-4">
       {notice ? (
         <Alert>
-          <AlertTitle className="text-lg">Voucher posted</AlertTitle>
-          <AlertDescription className="text-base">{notice}</AlertDescription>
+          <AlertTitle className="text-sm font-medium">Voucher posted</AlertTitle>
+          <AlertDescription className="text-sm font-light">{notice}</AlertDescription>
         </Alert>
       ) : null}
       {error ? (
         <Alert variant="destructive">
-          <AlertTitle className="text-lg">Not posted</AlertTitle>
-          <AlertDescription className="text-base">{error}</AlertDescription>
+          <AlertTitle className="text-sm font-medium">Not posted</AlertTitle>
+          <AlertDescription className="text-sm font-light">{error}</AlertDescription>
+        </Alert>
+      ) : null}
+      {blocked ? (
+        <Alert variant="destructive">
+          <AlertTitle className="text-sm font-medium">Not enough stock</AlertTitle>
+          <AlertDescription className="text-sm font-light">{blocked}</AlertDescription>
         </Alert>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="grid gap-2">
-          <Label htmlFor="party" className="text-base">
-            {stockIn ? "Supplier name" : "Customer shop name"}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-1.5">
+          <Label htmlFor="party" className="text-sm font-normal">
+            {stockIn ? "Supplier name" : "Customer shop"}
           </Label>
           <Input
             id="party"
+            className="h-11 text-sm"
             value={party}
             onChange={(event) => setParty(event.target.value)}
             placeholder={stockIn ? "Krishak Co-op Depot" : "Sharma Krishi Bhandar"}
           />
         </div>
-        <div className="grid gap-2">
-          <Label htmlFor="date" className="text-base">
+        <div className="grid gap-1.5">
+          <Label htmlFor="date" className="text-sm font-normal">
             Date
           </Label>
-          <Input id="date" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+          <Input
+            id="date"
+            className="h-11 text-sm"
+            type="date"
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
+          />
         </div>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-2 rounded-xl border bg-card p-3.5">
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          E-way bill (optional)
+        </p>
+        <div className="grid gap-2 sm:grid-cols-3">
+          <Input
+            className="h-10 text-sm"
+            value={ewayBillNo}
+            onChange={(event) => setEwayBillNo(event.target.value)}
+            placeholder="E-way bill no."
+          />
+          <Input
+            className="h-10 text-sm"
+            value={vehicleNo}
+            onChange={(event) => setVehicleNo(event.target.value)}
+            placeholder="Vehicle no."
+          />
+          <Input
+            className="h-10 text-sm"
+            value={transporterName}
+            onChange={(event) => setTransporterName(event.target.value)}
+            placeholder="Transporter"
+          />
+        </div>
+      </div>
+
+      <div className="grid gap-3">
         {lines.map((line, index) => {
           const product = byId.get(line.productId);
           const amount = Number(line.qty);
@@ -210,11 +253,11 @@ function Form({
           const lineMargin =
             product && amount > 0 && Number.isFinite(rate) ? amount * (rate - product.cp) : null;
           return (
-            <fieldset key={line.key} className="grid gap-3 rounded-xl border border-border bg-card p-4">
-              <legend className="px-1 text-base font-semibold">Line {index + 1}</legend>
-              <div className="grid gap-2">
-                <Label className="text-base" htmlFor={`product-${line.key}`}>
-                  Product
+            <fieldset key={line.key} className="grid gap-3 rounded-xl border bg-card p-3.5">
+              <legend className="px-1 text-sm font-medium">Line {index + 1}</legend>
+              <div className="grid gap-1.5">
+                <Label className="text-sm font-normal" htmlFor={`product-${line.key}`}>
+                  Product (HSN)
                 </Label>
                 <select
                   id={`product-${line.key}`}
@@ -224,48 +267,48 @@ function Form({
                 >
                   {products.map((item) => (
                     <option key={item.id} value={item.id}>
-                      {item.name} — {qtyWithUnit(item.stockQty, item.unit)}
+                      {item.hsnCode} · {item.name} — {qtyWithUnit(item.stockQty, item.unit)}
                     </option>
                   ))}
                 </select>
                 {product ? (
-                  <p className="text-base text-muted-foreground">
-                    On hand {qtyWithUnit(product.stockQty, product.unit)}. CP {inr(product.cp)}. SP{" "}
-                    {inr(product.sp)}.
+                  <p className="text-xs font-light text-muted-foreground">
+                    On hand {qtyWithUnit(product.stockQty, product.unit)}. {gstLabel(product.gstRate)}.
+                    CP {inr(product.cp)}. SP {inr(product.sp)}.
                   </p>
                 ) : null}
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="grid gap-2">
-                  <Label className="text-base" htmlFor={`qty-${line.key}`}>
+                <div className="grid gap-1.5">
+                  <Label className="text-sm font-normal" htmlFor={`qty-${line.key}`}>
                     Quantity
                   </Label>
                   <Input
                     id={`qty-${line.key}`}
+                    className="h-11 text-sm"
                     inputMode="decimal"
                     value={line.qty}
                     onChange={(event) => updateLine(line.key, { qty: event.target.value })}
-                    placeholder="10"
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label className="text-base" htmlFor={`rate-${line.key}`}>
+                <div className="grid gap-1.5">
+                  <Label className="text-sm font-normal" htmlFor={`rate-${line.key}`}>
                     {stockIn ? "Cost price (CP)" : "Selling price (SP)"}
                   </Label>
                   <Input
                     id={`rate-${line.key}`}
+                    className="h-11 text-sm"
                     inputMode="decimal"
                     value={line.rate}
                     onChange={(event) => updateLine(line.key, { rate: event.target.value })}
-                    placeholder={stockIn ? "250" : "270"}
                   />
                 </div>
               </div>
               {!stockIn && lineMargin != null ? (
-                <p className="text-lg font-semibold">
+                <p className="text-sm font-normal">
                   Margin on this line {inr(lineMargin)}
                   {product ? (
-                    <span className="ml-2 text-base font-medium text-muted-foreground">
+                    <span className="ml-2 text-xs font-light text-muted-foreground">
                       {inr(rate - product.cp)} per {product.unit}
                     </span>
                   ) : null}
@@ -274,9 +317,9 @@ function Form({
               {lines.length > 1 ? (
                 <Button
                   type="button"
-                  variant="ghost"
-                  className="h-11 justify-start px-2 text-base"
-                  onClick={() => setLines((current) => current.filter((item) => item.key !== line.key))}
+                  variant="outline"
+                  className="h-9 w-fit text-sm font-normal"
+                  onClick={() => setLines((current) => current.filter((row) => row.key !== line.key))}
                 >
                   Remove line
                 </Button>
@@ -286,25 +329,31 @@ function Form({
         })}
       </div>
 
-      {blocked ? <p className="text-lg font-semibold text-destructive">{blocked}</p> : null}
       {!stockIn ? (
-        <p className="text-xl font-semibold">Margin on this voucher {inr(previewMargin)}</p>
+        <p className="text-sm font-light text-muted-foreground">
+          Preview margin {inr(previewMargin)} (before GST).
+        </p>
       ) : (
-        <p className="text-base text-muted-foreground">
-          Posting increases stock and saves the last line&apos;s CP as the product cost.
+        <p className="text-sm font-light text-muted-foreground">
+          Posting increases stock and sets latest CP. GST adds on taxable amount.
         </p>
       )}
 
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <Button
           type="button"
           variant="outline"
-          className="h-14 text-lg"
+          className="h-11 flex-1 text-sm font-normal"
           onClick={() => setLines((current) => [...current, blankLine(products[0], mode)])}
         >
           Add another line
         </Button>
-        <Button type="button" className="h-14 flex-1 text-lg" disabled={busy || Boolean(blocked)} onClick={submit}>
+        <Button
+          type="button"
+          className="h-11 flex-1 text-sm font-normal"
+          disabled={busy || Boolean(blocked)}
+          onClick={submit}
+        >
           {busy ? "Posting…" : stockIn ? "Post stock in" : "Post stock out"}
         </Button>
       </div>

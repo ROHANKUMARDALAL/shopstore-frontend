@@ -25,8 +25,10 @@ export function AuthGate({ children }) {
 
   if (!ready) {
     return (
-      <div className="flex min-h-full flex-1 items-center justify-center px-4">
-        <p className="text-2xl font-semibold tracking-tight">Opening ShopStore…</p>
+      <div className="flex min-h-full flex-1 flex-col items-center justify-center gap-4 px-4">
+        <div className="page-loader-ring" aria-hidden />
+        <div className="page-loader-bar" aria-hidden />
+        <p className="text-sm font-light tracking-wide text-muted-foreground">Opening ShopStore…</p>
       </div>
     );
   }

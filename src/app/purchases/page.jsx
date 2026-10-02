@@ -1,7 +1,7 @@
 "use client";
 
-import { Register } from "@/components/register";
+import { PurchaseRegister } from "@/components/register";
 
 export default function PurchasesPage() {
-  return <Register kind="purchase" />;
+  return <PurchaseRegister />;
 }

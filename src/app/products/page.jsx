@@ -6,6 +6,7 @@ import { AddStockButton } from "@/components/add-stock-modal";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/states";
 import { getCategories, getProducts } from "@/lib/api";
 import { inr, qtyWithUnit } from "@/lib/format";
+import { gstLabel } from "@/lib/gst";
 import { stockStatusLabel, stockStatusVariant } from "@/lib/stock-status";
 import { useBook } from "@/lib/use-book";
 
@@ -23,23 +24,23 @@ export default function ProductsPage() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <PageHeader
           className="mb-0"
-          title="Products on the book"
-          lede="List se select karke stock add karo. Naya naam, category, ya bag/bottle size list me na ho to modal me hi turant add ho jata hai."
+          title="Products"
+          lede="Har product ka unique HSN code. Stock in/out, margin, aur GST usi HSN ke hisaab se chalte hain."
         />
         {ready ? (
           <AddStockButton
             categories={categoriesBook.data}
             products={productsBook.data}
             onDone={reloadAll}
-            className="h-14 shrink-0 gap-2 text-lg"
+            className="h-11 shrink-0 gap-2 text-sm font-normal"
           />
         ) : null}
       </div>
 
-      {!ready && loading ? <LoadingState /> : null}
+      {!ready && loading ? <LoadingState label="Loading products…" /> : null}
       {!ready && error ? <ErrorState message={error} onRetry={reloadAll} /> : null}
       {ready && productsBook.data ? <ProductList products={productsBook.data} /> : null}
     </div>
@@ -51,7 +52,7 @@ function ProductList({ products }) {
     return (
       <EmptyState
         title="No products yet"
-        body="Add stock button dabao. Category aur product list se choose karo, ya naya add karo."
+        body="Add stock se list choose karo, ya naya product HSN aur GST ke saath save karo."
       />
     );
   }
@@ -65,49 +66,65 @@ function ProductList({ products }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {[...groups.entries()].map(([category, rows]) => (
         <section key={category}>
-          <h2 className="mb-3 text-xl font-semibold">{category}</h2>
-          <ul className="grid gap-3">
+          <h2 className="mb-2 text-sm font-medium tracking-wide text-muted-foreground uppercase">
+            {category}
+          </h2>
+          <ul className="grid gap-2.5">
             {rows.map((product) => (
               <li key={product.id}>
-                <Card>
-                  <CardHeader className="gap-2">
+                <Card className="shadow-none">
+                  <CardHeader className="gap-1.5 py-4">
                     <div className="flex flex-wrap items-start justify-between gap-2">
-                      <CardTitle className="text-xl">{product.name}</CardTitle>
+                      <div>
+                        <CardTitle className="text-base font-medium tracking-tight">
+                          {product.name}
+                        </CardTitle>
+                        <p className="mt-1 text-xs font-light text-muted-foreground">
+                          HSN {product.hsnCode} · {gstLabel(product.gstRate)}
+                        </p>
+                      </div>
                       <Badge
                         variant={stockStatusVariant(
                           product.stockStatus || (product.lowStock ? "low" : "in_stock"),
                         )}
+                        className="font-normal"
                       >
                         {stockStatusLabel(
                           product.stockStatus || (product.lowStock ? "low" : "in_stock"),
                         )}
                       </Badge>
                     </div>
-                    <p className="text-lg font-semibold tabular-nums">
+                    <p className="text-sm font-normal tabular-nums">
                       {qtyWithUnit(product.stockQty, product.unit)}
                     </p>
                   </CardHeader>
-                  <CardContent className="grid grid-cols-3 gap-3 text-base">
+                  <CardContent className="grid grid-cols-2 gap-3 pb-4 text-sm sm:grid-cols-4">
                     <figure>
-                      <figcaption className="text-muted-foreground">CP</figcaption>
-                      <p className="text-lg font-semibold tabular-nums">{inr(product.cp)}</p>
+                      <figcaption className="text-xs text-muted-foreground">CP</figcaption>
+                      <p className="font-normal tabular-nums">{inr(product.cp)}</p>
                     </figure>
                     <figure>
-                      <figcaption className="text-muted-foreground">SP</figcaption>
-                      <p className="text-lg font-semibold tabular-nums">{inr(product.sp)}</p>
+                      <figcaption className="text-xs text-muted-foreground">SP</figcaption>
+                      <p className="font-normal tabular-nums">{inr(product.sp)}</p>
                     </figure>
                     <figure>
-                      <figcaption className="text-muted-foreground">Margin</figcaption>
-                      <p className="text-lg font-semibold tabular-nums">
+                      <figcaption className="text-xs text-muted-foreground">Margin</figcaption>
+                      <p className="font-normal tabular-nums">
                         {inr(product.marginPerUnit)}
                         {product.marginPercent != null ? (
-                          <span className="block text-sm font-medium text-muted-foreground">
+                          <span className="ml-1 text-xs text-muted-foreground">
                             {product.marginPercent}%
                           </span>
                         ) : null}
+                      </p>
+                    </figure>
+                    <figure>
+                      <figcaption className="text-xs text-muted-foreground">GST</figcaption>
+                      <p className="font-normal tabular-nums">
+                        {product.cgstRate}% + {product.sgstRate}%
                       </p>
                     </figure>
                   </CardContent>

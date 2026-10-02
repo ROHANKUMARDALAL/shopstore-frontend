@@ -9,10 +9,10 @@ import { API_URL } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
 const links = [
-  { href: "/", label: "1 · Dashboard" },
-  { href: "/products", label: "2 · Products" },
-  { href: "/stock-in", label: "3 · Buy / Stock in" },
-  { href: "/stock-out", label: "4 · Sell / Stock out" },
+  { href: "/", label: "Dashboard" },
+  { href: "/products", label: "Products" },
+  { href: "/stock-in", label: "Stock in" },
+  { href: "/stock-out", label: "Stock out" },
   { href: "/purchases", label: "Purchases" },
   { href: "/sales", label: "Sales" },
 ];
@@ -24,9 +24,8 @@ function CounterChrome({ children }) {
 
   if (authScreen) {
     return (
-      <div className="relative flex min-h-full flex-1 flex-col">
-        <div className="pointer-events-none absolute inset-0 app-atmosphere" aria-hidden />
-        <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 items-center justify-center px-4 py-8 md:px-8">
+      <div className="flex min-h-full flex-1 flex-col bg-background">
+        <main className="mx-auto flex w-full max-w-6xl flex-1 items-center justify-center px-4 py-8 md:px-8">
           {children}
         </main>
       </div>
@@ -34,28 +33,27 @@ function CounterChrome({ children }) {
   }
 
   return (
-    <div className="relative flex min-h-full flex-1 flex-col">
-      <div className="pointer-events-none absolute inset-0 app-atmosphere" aria-hidden />
-      <header className="relative z-40 border-b border-border/80 bg-card/85 backdrop-blur-md">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-end justify-between gap-4 px-4 pt-4 md:px-8">
+    <div className="flex min-h-full flex-1 flex-col bg-background">
+      <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-sm">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-4 pt-3 md:px-8">
           <div>
-            <p className="text-sm font-semibold tracking-[0.18em] text-primary uppercase">
+            <p className="text-[11px] font-medium tracking-[0.18em] text-primary uppercase">
               Fertiliser counter
             </p>
-            <p className="font-heading text-3xl font-semibold tracking-tight">ShopStore</p>
+            <p className="font-heading text-xl tracking-tight">ShopStore</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <div className="hidden text-right text-sm text-muted-foreground sm:block">
-              <p className="font-medium text-foreground">{user?.name}</p>
+            <div className="hidden text-right text-xs font-light text-muted-foreground sm:block">
+              <p className="font-normal text-foreground">{user?.name}</p>
               <p>{user?.email}</p>
-              <p className="mt-1 text-xs">API {API_URL.replace("http://", "")}</p>
+              <p className="mt-0.5 opacity-80">API {API_URL.replace("http://", "")}</p>
             </div>
-            <Button type="button" variant="outline" className="h-11" onClick={logout}>
+            <Button type="button" variant="outline" className="h-9 text-sm font-normal" onClick={logout}>
               Sign out
             </Button>
           </div>
         </div>
-        <nav className="mx-auto flex w-full max-w-6xl gap-2 overflow-x-auto px-4 py-3 md:px-8">
+        <nav className="mx-auto flex w-full max-w-6xl gap-1.5 overflow-x-auto px-4 py-2.5 md:px-8">
           {links.map((link) => {
             const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
             return (
@@ -63,10 +61,10 @@ function CounterChrome({ children }) {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "shrink-0 rounded-xl px-4 py-3 text-base font-semibold transition-colors",
+                  "shrink-0 rounded-lg px-3.5 py-2 text-sm font-normal transition-colors",
                   active
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-muted/80 text-foreground hover:bg-accent",
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
                 {link.label}
@@ -75,9 +73,7 @@ function CounterChrome({ children }) {
           })}
         </nav>
       </header>
-      <main className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-4 py-6 md:px-8 md:py-8">
-        {children}
-      </main>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-5 md:px-8 md:py-7">{children}</main>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { getDashboard } from "@/lib/api";
 import { inr, qtyWithUnit } from "@/lib/format";
+import { gstLabel } from "@/lib/gst";
 import { useBook } from "@/lib/use-book";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,18 +15,18 @@ import { stockStatusLabel } from "@/lib/stock-status";
 const steps = [
   {
     href: "/products",
-    title: "Add product",
-    body: "Name, pack size, CP, SP, and opening bags on the floor.",
+    title: "Products + HSN",
+    body: "Unique HSN, GST rate, pack size, CP/SP.",
   },
   {
     href: "/stock-in",
-    title: "Buy / Stock in",
-    body: "Supplier bill. Quantity goes up. Rate becomes the latest CP.",
+    title: "Stock in",
+    body: "Buy by HSN. Optional e-way bill on the lorry.",
   },
   {
     href: "/stock-out",
-    title: "Sell / Stock out",
-    body: "Shop bill. Quantity goes down. Margin shows before you post.",
+    title: "Stock out",
+    body: "Sell by HSN. Margin + GST + e-way bill.",
   },
 ];
 
@@ -36,116 +37,95 @@ export default function DashboardPage() {
     <div className="rise-in">
       <PageHeader
         title="Godown today"
-        lede="Simple counter flow: add the bag to the book, buy stock in, sell stock out. No GST, no ledger — only what is on hand."
+        lede="Clean counter: HSN-wise stock, GST per product, margin, aur e-way bill jab chahiye."
       />
-      {loading && !data ? <LoadingState /> : null}
+      {loading && !data ? <LoadingState label="Loading dashboard…" /> : null}
       {error && !data ? <ErrorState message={error} onRetry={reload} /> : null}
       {data ? (
-        <div className="space-y-8">
-          <section className="rise-in rise-in-delay-1">
-            <h2 className="mb-3 font-heading text-2xl font-semibold tracking-tight">
-              How the counter works
+        <div className="space-y-6">
+          <section>
+            <h2 className="mb-2 text-sm font-medium tracking-wide text-muted-foreground uppercase">
+              Counter flow
             </h2>
-            <ol className="grid gap-3 md:grid-cols-3">
+            <ol className="grid gap-2 md:grid-cols-3">
               {steps.map((step, index) => (
                 <li key={step.href}>
                   <Link
                     href={step.href}
-                    className="block h-full rounded-2xl border border-border bg-card/90 p-5 transition-transform hover:-translate-y-0.5 hover:border-primary/40"
+                    className="block h-full rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40"
                   >
-                    <p className="text-sm font-semibold tracking-wide text-primary uppercase">
+                    <p className="text-[11px] font-medium tracking-wide text-primary uppercase">
                       Step {index + 1}
                     </p>
-                    <p className="mt-2 text-xl font-semibold">{step.title}</p>
-                    <p className="mt-2 text-base text-muted-foreground">{step.body}</p>
+                    <p className="mt-1 text-sm font-medium">{step.title}</p>
+                    <p className="mt-1 text-xs font-light text-muted-foreground">{step.body}</p>
                   </Link>
                 </li>
               ))}
             </ol>
           </section>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 rise-in rise-in-delay-2">
-            <Metric
-              label="Stock value at cost"
-              value={inr(data.stockValueAtCp)}
-              note="Cost price times the quantity still in the godown."
-            />
+          <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+            <Metric label="Stock value at cost" value={inr(data.stockValueAtCp)} note="CP × qty on hand" />
             <Metric
               label="Stock value at selling price"
               value={inr(data.stockValueAtSp)}
-              note="What the same bags would fetch at today's SP."
+              note="SP × qty on hand"
             />
-            <Metric
-              label="Bought today"
-              value={inr(data.todayPurchaseTotal)}
-              note="Purchase vouchers dated today, at the rate on the bill."
-            />
-            <Metric
-              label="Sold today"
-              value={inr(data.todaySalesTotal)}
-              note="Sales vouchers dated today, at the rate we charged."
-            />
+            <Metric label="Bought today" value={inr(data.todayPurchaseTotal)} note="Taxable purchase total" />
+            <Metric label="Sold today" value={inr(data.todaySalesTotal)} note="Taxable sales total" />
             <Metric
               label="Gross margin today"
               value={inr(data.grossMargin)}
-              note="Today's sales minus the cost price on each bag when it left."
+              note="Sales minus CP at sale"
               emphasize
             />
-            <Metric
-              label="Low stock"
-              value={String(data.lowStock.length)}
-              note="Products at or under their reorder level."
-            />
+            <Metric label="Low stock" value={String(data.lowStock.length)} note="At or under reorder" />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Link
-              href="/stock-in"
-              className={cn(buttonVariants({ size: "lg" }), "h-16 text-lg")}
-            >
-              Buy / Stock in
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Link href="/stock-in" className={cn(buttonVariants({ size: "lg" }), "h-11 text-sm font-normal")}>
+              Stock in
             </Link>
             <Link
               href="/stock-out"
-              className={cn(
-                buttonVariants({ variant: "secondary", size: "lg" }),
-                "h-16 text-lg",
-              )}
+              className={cn(buttonVariants({ variant: "secondary", size: "lg" }), "h-11 text-sm font-normal")}
             >
-              Sell / Stock out
+              Stock out
             </Link>
           </div>
 
-          <section className="rise-in rise-in-delay-3">
-            <h2 className="mb-3 font-heading text-2xl font-semibold tracking-tight">
+          <section>
+            <h2 className="mb-2 text-sm font-medium tracking-wide text-muted-foreground uppercase">
               Needs a reorder
             </h2>
             {data.lowStock.length === 0 ? (
               <EmptyState
                 title="Nothing is at reorder"
-                body="The godown is covered for now. Low stock shows up here when a product is at or under its reorder level."
+                body="Low stock yahan dikhega jab qty reorder level pe ya usse kam ho."
               />
             ) : (
-              <ul className="grid gap-3">
+              <ul className="grid gap-2.5">
                 {data.lowStock.map((product) => (
                   <li key={product.id}>
-                    <Card>
-                      <CardHeader>
+                    <Card className="shadow-none">
+                      <CardHeader className="py-4">
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <CardTitle className="text-xl">{product.name}</CardTitle>
-                            <CardDescription className="text-base">
+                            <CardTitle className="text-base font-medium">{product.name}</CardTitle>
+                            <CardDescription className="text-xs font-light">
+                              HSN {product.hsnCode} · {gstLabel(product.gstRate)} ·{" "}
                               {product.categoryName}
                             </CardDescription>
                           </div>
-                          <Badge variant="destructive">
+                          <Badge variant="destructive" className="font-normal">
                             {stockStatusLabel(product.stockStatus || "low")}
                           </Badge>
                         </div>
                       </CardHeader>
-                      <CardContent className="text-lg">
+                      <CardContent className="pb-4 text-sm font-light">
                         On hand{" "}
-                        <span className="font-semibold tabular-nums">
+                        <span className="font-normal tabular-nums">
                           {qtyWithUnit(product.stockQty, product.unit)}
                         </span>
                         . Reorder at {qtyWithUnit(product.reorderLevel, product.unit)}.
@@ -164,12 +144,12 @@ export default function DashboardPage() {
 
 function Metric({ label, value, note, emphasize = false }) {
   return (
-    <Card className={emphasize ? "bg-accent/80" : "bg-card/90"}>
-      <CardHeader>
-        <CardDescription className="text-base">{label}</CardDescription>
-        <CardTitle className="font-heading text-3xl tabular-nums">{value}</CardTitle>
+    <Card className={emphasize ? "border-primary/20 bg-accent/50 shadow-none" : "shadow-none"}>
+      <CardHeader className="py-4">
+        <CardDescription className="text-xs font-light">{label}</CardDescription>
+        <CardTitle className="font-heading text-2xl font-medium tabular-nums">{value}</CardTitle>
       </CardHeader>
-      <CardContent className="text-base text-muted-foreground">{note}</CardContent>
+      <CardContent className="pb-4 text-xs font-light text-muted-foreground">{note}</CardContent>
     </Card>
   );
 }

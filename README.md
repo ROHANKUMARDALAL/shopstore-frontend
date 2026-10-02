@@ -1,6 +1,6 @@
 # ShopStore counter
 
-Browser screens for a fertiliser wholesale and retail stock counter. Staff sign up, add products, book stock in (we bought), and book stock out (we sold). The stock rules live in the ShopStore API, a separate Node.js project. This repo is only the counter UI.
+Browser screens for a fertiliser wholesale and retail stock counter. Staff sign up, manage products by unique HSN with per-product GST, book stock in/out, and fill optional e-way bill details. The stock rules live in the ShopStore API, a separate Node.js project. This repo is only the counter UI.
 
 ## Run locally
 

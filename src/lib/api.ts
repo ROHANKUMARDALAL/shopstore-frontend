@@ -22,6 +22,10 @@ export type Product = {
   name: string;
   categoryId: string;
   categoryName: string;
+  hsnCode: string;
+  gstRate: number;
+  cgstRate: number;
+  sgstRate: number;
   unit: string;
   cp: number;
   sp: number;
@@ -37,8 +41,15 @@ export type PurchaseLine = {
   productId: string;
   productName: string;
   unit: string;
+  hsnCode: string;
   qty: number;
   cp: number;
+  gstRate: number;
+  cgstRate: number;
+  sgstRate: number;
+  taxable: number;
+  cgst: number;
+  sgst: number;
   lineTotal: number;
 };
 
@@ -46,7 +57,13 @@ export type Purchase = {
   id: string;
   supplierName: string;
   date: string;
+  ewayBillNo: string;
+  vehicleNo: string;
+  transporterName: string;
   lines: PurchaseLine[];
+  taxableTotal: number;
+  cgstTotal: number;
+  sgstTotal: number;
   total: number;
 };
 
@@ -54,9 +71,16 @@ export type SaleLine = {
   productId: string;
   productName: string;
   unit: string;
+  hsnCode: string;
   qty: number;
   sp: number;
   cpAtSale: number;
+  gstRate: number;
+  cgstRate: number;
+  sgstRate: number;
+  taxable: number;
+  cgst: number;
+  sgst: number;
   lineTotal: number;
   margin: number;
 };
@@ -65,7 +89,13 @@ export type Sale = {
   id: string;
   customerShopName: string;
   date: string;
+  ewayBillNo: string;
+  vehicleNo: string;
+  transporterName: string;
   lines: SaleLine[];
+  taxableTotal: number;
+  cgstTotal: number;
+  sgstTotal: number;
   total: number;
   margin: number;
 };
@@ -168,6 +198,8 @@ export const getProducts = () => request<Product[]>("/api/products");
 export const createProduct = (body: {
   name: string;
   category: string;
+  hsnCode: string;
+  gstRate: number;
   unit: string;
   cp: number;
   sp: number;
@@ -179,12 +211,18 @@ export const createProduct = (body: {
     body: JSON.stringify(body),
   });
 
+export type EwayFields = {
+  ewayBillNo?: string;
+  vehicleNo?: string;
+  transporterName?: string;
+};
+
 export const getPurchases = () => request<Purchase[]>("/api/purchases");
 export const createPurchase = (body: {
   supplierName: string;
   date: string;
   lines: { product: string; qty: number; cp: number }[];
-}) =>
+} & EwayFields) =>
   request<Purchase>("/api/purchases", {
     method: "POST",
     body: JSON.stringify(body),
@@ -197,7 +235,7 @@ export const createSale = (body: {
   customerShopName: string;
   date: string;
   lines: { product: string; qty: number; sp: number }[];
-}) =>
+} & EwayFields) =>
   request<Sale>("/api/sales", {
     method: "POST",
     body: JSON.stringify(body),

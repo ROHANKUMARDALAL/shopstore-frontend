@@ -1,7 +1,7 @@
 "use client";
 
-import { Register } from "@/components/register";
+import { SalesRegister } from "@/components/register";
 
 export default function SalesPage() {
-  return <Register kind="sale" />;
+  return <SalesRegister />;
 }
