@@ -1,9 +1,9 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
-export function PageHeader({ title, lede }) {
+export function PageHeader({ title, lede, className }) {
   return (
-    <header className="mb-6">
+    <header className={className || "mb-6"}>
       <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">{title}</h1>
       <p className="mt-2 max-w-3xl text-lg leading-snug text-muted-foreground">{lede}</p>
     </header>
